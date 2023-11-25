@@ -15,6 +15,7 @@ func TestFilter_SQL(t *testing.T) {
 		fields    fields
 		wantWhere string
 		wantArgs  []any
+		wantErr   bool
 	}{
 		{
 			name: "username and email",
@@ -77,14 +78,17 @@ func TestFilter_SQL(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			f := &Filter{
 				expression: tt.fields.expression,
-				err:        tt.fields.err,
 			}
-			got, got1 := f.SQL()
-			if got != tt.wantWhere {
-				t.Errorf("Filter.SQL() gotWhere = %v, want %v", got, tt.wantWhere)
+			gotWhere, gotArgs, err := f.SQL()
+			if gotWhere != tt.wantWhere {
+				t.Errorf("Filter.SQL() gotWhere = %v, want %v", gotWhere, tt.wantWhere)
 			}
-			if !reflect.DeepEqual(got1, tt.wantArgs) {
-				t.Errorf("Filter.SQL() gotArgs = %v, want %v", got1, tt.wantArgs)
+			if !reflect.DeepEqual(gotArgs, tt.wantArgs) {
+				t.Errorf("Filter.SQL() gotArgs = %v, want %v", gotArgs, tt.wantArgs)
+			}
+
+			if !tt.wantErr && err != nil {
+				t.Errorf("Filter.SQL() gotErr = %v, wantErr %t", err, tt.wantErr)
 			}
 		})
 	}

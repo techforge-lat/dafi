@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	AscOrder  = "+"
-	DescOrder = "-"
+	AscOrder  = "ASC"
+	DescOrder = "DESC"
 )
 
 type Sort struct {
@@ -15,15 +15,15 @@ type Sort struct {
 	items      SortItems
 }
 
-func NewSort(items SortItems) *Sort {
-	return &Sort{items: items}
+func NewSort(items SortItems) Sort {
+	return Sort{items: items}
 }
 
-func NewSortExpression(expression string) *Sort {
-	return &Sort{expression: expression}
+func NewSortExpression(expression string) Sort {
+	return Sort{expression: expression}
 }
 
-func (s *Sort) SQL() string {
+func (s Sort) SQL() string {
 	if len(s.items) == 0 {
 		s.items = buildSortItems(s.expression)
 	}

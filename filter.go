@@ -12,30 +12,51 @@ var (
 	ErrInvalidOperator     = errors.New("invalid operator, must be a =, <, >, <=, >=, <>, !=, IS, ILIKE, LIKE")
 )
 
+const (
+	And = "AND"
+	Or  = "OR"
+)
+
+const (
+	Equal              = "="
+	LessThan           = "<"
+	GreaterThan        = ">"
+	LessThanOrEqual    = "<="
+	GreaterThanOrEqual = ">="
+	Different          = "<>"
+	Is                 = "IS"
+	IsNot              = "IS_NOT"
+	ILike              = "ILIKE"
+	NotILike           = "NOT_ILIKE"
+	Like               = "LIKE"
+	NotLike            = "NOT_LIKE"
+)
+
 type Filter struct {
 	expression string
 	items      FilterItems
-	err        error
 }
 
-func NewFilter(items FilterItems) *Filter {
-	return &Filter{items: items}
+func NewFilter(items FilterItems) Filter {
+	return Filter{items: items}
 }
 
-func NewFilterExpression(expression string) *Filter {
-	return &Filter{expression: expression}
+func NewFilterExpression(expression string) Filter {
+	return Filter{expression: expression}
 }
 
-func (f *Filter) SQL() (string, []any) {
+func (f Filter) SQL() (string, []any, error) {
 	if len(f.items) == 0 {
-		f.items, f.err = buildFilterItems(f.expression)
-		if f.err != nil {
-			return "", nil
+		ms, err := buildFilterItems(f.expression)
+		if err != nil {
+			return "", nil, err
 		}
+
+		f.items = ms
 	}
 
 	if len(f.items) == 0 {
-		return "", nil
+		return "", nil, nil
 	}
 
 	builder := bytes.Buffer{}
@@ -46,8 +67,7 @@ func (f *Filter) SQL() (string, []any) {
 	for index, item := range f.items {
 		op, err := item.getOperator()
 		if err != nil {
-			f.err = err
-			return "", nil
+			return "", nil, err
 		}
 
 		builder.WriteString(item.Field)
@@ -66,11 +86,7 @@ func (f *Filter) SQL() (string, []any) {
 		args = append(args, item.Value)
 	}
 
-	return strings.TrimSpace(builder.String()), args
-}
-
-func (f *Filter) Err() error {
-	return f.err
+	return strings.TrimSpace(builder.String()), args, nil
 }
 
 type FilterItem struct {
@@ -80,44 +96,12 @@ type FilterItem struct {
 	ChainingKey string
 }
 
-func NewFilterItem() *FilterItem {
-	return &FilterItem{}
-}
-
-func (f *FilterItem) SetField(field string) *FilterItem {
-	f.Field = field
-	return f
-}
-
-func (f *FilterItem) SetOperator(op string) *FilterItem {
-	f.Operator = op
-	return f
-}
-
-func (f *FilterItem) SetValue(value string) *FilterItem {
-	f.Value = value
-	return f
-}
-
-func (f *FilterItem) SetChainingKey(key string) *FilterItem {
-	f.ChainingKey = key
-	return f
-}
-
 func (f FilterItem) getOperator() (string, error) {
-	validOperators := []string{"=", "<", ">", "<=", ">=", "<>", "!=", "is", "ilike", "like", "not_like"}
+	validOperators := []string{"=", "<", ">", "<=", ">=", "<>", "!=", "is", "is_not", "ilike", "not_ilike", "like", "not_like"}
 
 	for _, v := range validOperators {
-		if strings.EqualFold(f.Operator, "not_like") {
-			return "NOT LIKE", nil
-		}
-
-		if strings.EqualFold(f.Operator, "is_not") {
-			return "IS NOT", nil
-		}
-
 		if strings.EqualFold(f.Operator, v) {
-			return strings.ToUpper(v), nil
+			return strings.ReplaceAll(strings.ToUpper(v), "_", " "), nil
 		}
 	}
 
