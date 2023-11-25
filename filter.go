@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrInvalidFilterFormat = errors.New("invalid filter format, must contain a name, operator and value in the form of name:operator:value with and optional chainingKey (and, or)")
+	ErrInvalidFilterFormat = errors.New("invalid filter format, format is: field operator [value] chainingKey")
 	ErrInvalidOperator     = errors.New("invalid operator, must be a =, <, >, <=, >=, <>, !=, IS, ILIKE, LIKE")
 )
 
@@ -125,7 +125,15 @@ func buildFilterItems(expression string) (FilterItems, error) {
 		}
 
 		valueOpenIndex := strings.Index(v, "[")
+		if valueOpenIndex == -1 {
+			return nil, ErrInvalidFilterFormat
+		}
+
 		valueCloseIndex := strings.LastIndex(v, "]")
+		if valueCloseIndex == -1 {
+			return nil, ErrInvalidFilterFormat
+		}
+
 		item := FilterItem{
 			Field:       firstParts[0],
 			Operator:    firstParts[1],

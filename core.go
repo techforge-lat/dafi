@@ -21,5 +21,5 @@ func (c Criteria) SQL() (string, []any, error) {
 	sort := c.Sort.SQL()
 	pag := c.Pagination.SQL()
 
-	return fmt.Sprintf("%s %s %s", where, sort, pag), args, nil
+	return fmt.Sprintf(" %s %s %s", where, sort, pag), args, nil
 }
