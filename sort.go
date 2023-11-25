@@ -15,6 +15,14 @@ type Sort struct {
 	items      SortItems
 }
 
+func NewSort(items SortItems) *Sort {
+	return &Sort{items: items}
+}
+
+func NewSortExpression(expression string) *Sort {
+	return &Sort{expression: expression}
+}
+
 func (s *Sort) SQL() string {
 	if len(s.items) == 0 {
 		s.items = buildSortItems(s.expression)
