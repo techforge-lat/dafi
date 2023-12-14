@@ -2,6 +2,7 @@ package dafi
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 )
 
@@ -21,6 +22,25 @@ func NewSort(items SortItems) Sort {
 
 func NewSortExpression(expression string) Sort {
 	return Sort{expression: expression}
+}
+
+func (s Sort) ReplaceAbstractNames(names map[string]string) error {
+	for i, v := range s.items {
+		var isFound bool
+		for abstractName, name := range names {
+			if v.Field == abstractName {
+				s.items[i].Field = name
+				isFound = true
+				break
+			}
+		}
+
+		if !isFound {
+			return fmt.Errorf("sort: %w, field %s is missing", ErrInvalidFieldName, v.Field)
+		}
+	}
+
+	return nil
 }
 
 func (s Sort) SQL() string {

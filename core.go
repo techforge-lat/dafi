@@ -23,3 +23,23 @@ func (c Criteria) SQL() (string, []any, error) {
 
 	return fmt.Sprintf(" %s %s %s", where, sort, pag), args, nil
 }
+
+func (c Criteria) SQLWithReplacedNames(names map[string]string) (string, []any, error) {
+	if err := c.Filter.ReplaceAbstractNames(names); err != nil {
+		return "", nil, err
+	}
+
+	where, args, err := c.Filter.SQL()
+	if err != nil {
+		return "", nil, err
+	}
+
+	if err := c.Sort.ReplaceAbstractNames(names); err != nil {
+		return "", nil, err
+	}
+	sort := c.Sort.SQL()
+
+	pag := c.Pagination.SQL()
+
+	return fmt.Sprintf(" %s %s %s", where, sort, pag), args, nil
+}

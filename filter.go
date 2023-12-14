@@ -3,6 +3,7 @@ package dafi
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -10,6 +11,7 @@ import (
 var (
 	ErrInvalidFilterFormat = errors.New("invalid filter format, format is: field operator [value] chainingKey")
 	ErrInvalidOperator     = errors.New("invalid operator, must be a =, <, >, <=, >=, <>, !=, IS, ILIKE, LIKE")
+	ErrInvalidFieldName    = errors.New("invalid field name")
 )
 
 const (
@@ -23,13 +25,14 @@ const (
 	GreaterThan        = ">"
 	LessThanOrEqual    = "<="
 	GreaterThanOrEqual = ">="
-	Different          = "<>"
+	NotEqual           = "<>"
 	Is                 = "IS"
 	IsNot              = "IS_NOT"
 	ILike              = "ILIKE"
 	NotILike           = "NOT_ILIKE"
 	Like               = "LIKE"
 	NotLike            = "NOT_LIKE"
+	In                 = "IN"
 )
 
 type Filter struct {
@@ -41,8 +44,33 @@ func NewFilter(items FilterItems) Filter {
 	return Filter{items: items}
 }
 
+func NewFilterItems(items ...FilterItem) Filter {
+	return Filter{
+		items: items,
+	}
+}
+
 func NewFilterExpression(expression string) Filter {
 	return Filter{expression: expression}
+}
+
+func (f Filter) ReplaceAbstractNames(names map[string]string) error {
+	for i, v := range f.items {
+		var isFound bool
+		for abstractName, name := range names {
+			if v.Field == abstractName {
+				f.items[i].Field = name
+				isFound = true
+				break
+			}
+		}
+
+		if !isFound {
+			return fmt.Errorf("filter: %w, field %s is missing", ErrInvalidFieldName, v.Field)
+		}
+	}
+
+	return nil
 }
 
 func (f Filter) SQL() (string, []any, error) {
@@ -64,6 +92,7 @@ func (f Filter) SQL() (string, []any, error) {
 
 	args := []any{}
 
+	var count int
 	for index, item := range f.items {
 		op, err := item.getOperator()
 		if err != nil {
@@ -73,78 +102,35 @@ func (f Filter) SQL() (string, []any, error) {
 		builder.WriteString(item.Field)
 		builder.WriteString(" ")
 		builder.WriteString(op)
-		builder.WriteString(" ")
-		builder.WriteString("$")
-		builder.WriteString(strconv.Itoa(index + 1))
 
-		if item.ChainingKey != "" {
+		if op == In {
+			in, inArgs := buildIn(item.Value, count)
+			builder.WriteString(" ")
+			builder.WriteString(in)
+
+			count += len(inArgs)
+			args = append(args, inArgs...)
+		} else {
+			builder.WriteString(" ")
+			builder.WriteString("$")
+			builder.WriteString(strconv.Itoa(count + 1))
+			count++
+		}
+
+		if item.ChainingKey != "" && len(f.items)-1 > index {
 			builder.WriteString(" ")
 			builder.WriteString(strings.ToUpper(item.ChainingKey))
 			builder.WriteString(" ")
+		}
+
+		if op == In {
+			continue
 		}
 
 		args = append(args, item.Value)
 	}
 
 	return strings.TrimSpace(builder.String()), args, nil
-}
-
-type FilterItem struct {
-	Field       string
-	Operator    string
-	Value       any
-	ChainingKey string
-}
-
-func (f FilterItem) getOperator() (string, error) {
-	validOperators := []string{"=", "<", ">", "<=", ">=", "<>", "!=", "is", "is_not", "ilike", "not_ilike", "like", "not_like"}
-
-	for _, v := range validOperators {
-		if strings.EqualFold(f.Operator, v) {
-			return strings.ReplaceAll(strings.ToUpper(v), "_", " "), nil
-		}
-	}
-
-	return "", ErrInvalidOperator
-}
-
-type FilterItems []FilterItem
-
-func buildFilterItems(expression string) (FilterItems, error) {
-	if expression == "" {
-		return nil, nil
-	}
-	var items FilterItems
-
-	queryParts := strings.Split(expression, ";")
-	for _, v := range queryParts {
-		firstParts := strings.Split(v, " ")[:2]
-		firstPartsLen := len(firstParts)
-		if firstPartsLen != 2 {
-			return nil, ErrInvalidFilterFormat
-		}
-
-		valueOpenIndex := strings.Index(v, "[")
-		if valueOpenIndex == -1 {
-			return nil, ErrInvalidFilterFormat
-		}
-
-		valueCloseIndex := strings.LastIndex(v, "]")
-		if valueCloseIndex == -1 {
-			return nil, ErrInvalidFilterFormat
-		}
-
-		item := FilterItem{
-			Field:       firstParts[0],
-			Operator:    firstParts[1],
-			Value:       v[valueOpenIndex+1 : valueCloseIndex],
-			ChainingKey: strings.TrimSpace(v[valueCloseIndex+1:]),
-		}
-
-		items = append(items, item)
-	}
-
-	return items, nil
 }
 
 func isChainingKey(value string) bool {

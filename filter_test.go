@@ -20,7 +20,7 @@ func TestFilter_SQL(t *testing.T) {
 		{
 			name: "username and email",
 			fields: fields{
-				expression: "username = [john doe] AND;email LIKE [%example.com]",
+				expression: "username = [john doe] AND:email LIKE [%example.com]",
 			},
 			wantWhere: "WHERE username = $1 AND email LIKE $2",
 			wantArgs:  []any{"john doe", "%example.com"},
@@ -36,7 +36,7 @@ func TestFilter_SQL(t *testing.T) {
 		{
 			name: "username and is_admin",
 			fields: fields{
-				expression: "username = [admin] OR;is_admin = [true]",
+				expression: "username = [admin] OR:is_admin = [true]",
 			},
 			wantWhere: "WHERE username = $1 OR is_admin = $2",
 			wantArgs:  []any{"admin", "true"},
@@ -52,7 +52,7 @@ func TestFilter_SQL(t *testing.T) {
 		{
 			name: "username and (email or is_admin)",
 			fields: fields{
-				expression: "username = [john doe] AND;email LIKE [%example.com] OR;is_admin = [true]",
+				expression: "username = [john doe] AND:email LIKE [%example.com] OR:is_admin = [true]",
 			},
 			wantWhere: "WHERE username = $1 AND email LIKE $2 OR is_admin = $3",
 			wantArgs:  []any{"john doe", "%example.com", "true"},
@@ -60,7 +60,7 @@ func TestFilter_SQL(t *testing.T) {
 		{
 			name: "username or (email and is_admin)",
 			fields: fields{
-				expression: "username = [admin] OR;email LIKE [%example.com] AND;is_admin = [true]",
+				expression: "username = [admin] OR:email LIKE [%example.com] AND:is_admin = [true]",
 			},
 			wantWhere: "WHERE username = $1 OR email LIKE $2 AND is_admin = $3",
 			wantArgs:  []any{"admin", "%example.com", "true"},
@@ -72,6 +72,38 @@ func TestFilter_SQL(t *testing.T) {
 			},
 			wantWhere: "",
 			wantArgs:  nil,
+		},
+		{
+			name: "username or (email and is_admin)",
+			fields: fields{
+				expression: "username ilike [%admin%]",
+			},
+			wantWhere: "WHERE username ILIKE $1",
+			wantArgs:  []any{"%admin%"},
+		},
+		{
+			name: "username in",
+			fields: fields{
+				expression: "username in [hernan,fer,david,erick]",
+			},
+			wantWhere: "WHERE username IN ($1, $2, $3, $4)",
+			wantArgs:  []any{"hernan", "fer", "david", "erick"},
+		},
+		{
+			name: "username in",
+			fields: fields{
+				expression: "username in [1,2,3]",
+			},
+			wantWhere: "WHERE username IN ($1, $2, $3)",
+			wantArgs:  []any{"1", "2", "3"},
+		},
+		{
+			name: "domain equal and slug in",
+			fields: fields{
+				expression: "domain = [facebook.com] AND:slug IN [facebook,apple,microsoft]",
+			},
+			wantWhere: "WHERE domain = $1 AND slug IN ($2, $3, $4)",
+			wantArgs:  []any{"facebook.com", "facebook", "apple", "microsoft"},
 		},
 	}
 	for _, tt := range tests {
