@@ -54,6 +54,14 @@ func NewFilterExpression(expression string) Filter {
 	return Filter{expression: expression}
 }
 
+func (f *Filter) AppendItems(items ...FilterItem) {
+	f.items = append(f.items, items...)
+}
+
+func (f Filter) ItemsLen() int {
+	return len(f.items)
+}
+
 func (f Filter) ReplaceAbstractNames(names map[string]string) error {
 	for i, v := range f.items {
 		var isFound bool
