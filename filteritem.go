@@ -1,12 +1,16 @@
 package dafi
 
-import "strings"
+import (
+	"strings"
+)
 
 type FilterItem struct {
 	Field       string
 	Operator    string
 	Value       any
 	ChainingKey string
+	GroupOpen   string
+	GroupClose  string
 }
 
 func NewFilterItem(field string, operator string, value any, chainingKey ...string) FilterItem {
@@ -21,6 +25,14 @@ func NewFilterItem(field string, operator string, value any, chainingKey ...stri
 	}
 
 	return f
+}
+
+func (f FilterItem) HasGroupOpen() bool {
+	return f.GroupOpen != ""
+}
+
+func (f FilterItem) HasGroupClose() bool {
+	return f.GroupClose != ""
 }
 
 func (f FilterItem) getOperator() (string, error) {
@@ -45,8 +57,29 @@ func buildFilterItems(expression string) (FilterItems, error) {
 
 	queryParts := strings.Split(expression, ":")
 	for _, v := range queryParts {
-		firstParts := strings.Split(v, " ")[:2]
+		firstParts := strings.Split(v, " ")
 		firstPartsLen := len(firstParts)
+
+		if firstPartsLen == 1 && firstParts[0] == "(" {
+			item := FilterItem{
+				GroupOpen: "(",
+			}
+
+			items = append(items, item)
+			continue
+		}
+
+		if firstPartsLen == 1 && firstParts[0] == ")" {
+			item := FilterItem{
+				GroupClose: ")",
+			}
+
+			items = append(items, item)
+			continue
+		}
+
+		firstParts = firstParts[:2]
+		firstPartsLen = len(firstParts)
 		if firstPartsLen != 2 {
 			return nil, ErrInvalidFilterFormat
 		}

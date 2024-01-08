@@ -24,11 +24,15 @@ func NewSortExpression(expression string) Sort {
 	return Sort{expression: expression}
 }
 
-func (s Sort) ReplaceAbstractNames(names map[string]string) error {
+func (s *Sort) ReplaceAbstractNames(names map[string]string) error {
+	if len(s.items) == 0 {
+		s.items = buildSortItems(s.expression)
+	}
+
 	for i, v := range s.items {
 		var isFound bool
 		for abstractName, name := range names {
-			if v.Field == abstractName {
+			if strings.HasPrefix(v.Field, abstractName) {
 				s.items[i].Field = name
 				isFound = true
 				break
@@ -73,7 +77,7 @@ func buildSortItems(expression string) SortItems {
 	}
 	var items SortItems
 
-	sortParts := strings.Split(expression, ";")
+	sortParts := strings.Split(expression, ":")
 	for _, v := range sortParts {
 		order := v[len(v)-1]
 		if order == '+' {

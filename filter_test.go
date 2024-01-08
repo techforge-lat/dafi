@@ -105,6 +105,14 @@ func TestFilter_SQL(t *testing.T) {
 			wantWhere: "WHERE domain = $1 AND slug IN ($2, $3, $4)",
 			wantArgs:  []any{"facebook.com", "facebook", "apple", "microsoft"},
 		},
+		{
+			name: "domain equal and slug in with groups",
+			fields: fields{
+				expression: "domain = [facebook.com] AND:(:slug IN [facebook,apple,microsoft] OR:id = [123]:)",
+			},
+			wantWhere: "WHERE domain = $1 AND (slug IN ($2, $3, $4) OR id = $5)",
+			wantArgs:  []any{"facebook.com", "facebook", "apple", "microsoft", "123"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

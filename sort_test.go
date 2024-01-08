@@ -15,21 +15,21 @@ func TestSort_SQL(t *testing.T) {
 		{
 			name: "",
 			fields: fields{
-				expression: "name+;age-",
+				expression: "name+:age-",
 			},
 			want: " ORDER BY name ASC, age DESC",
 		},
 		{
 			name: "",
 			fields: fields{
-				expression: "name+;age",
+				expression: "name+:age",
 			},
 			want: " ORDER BY name ASC, age ASC",
 		},
 		{
 			name: "",
 			fields: fields{
-				expression: "name;age",
+				expression: "name:age",
 			},
 			want: " ORDER BY name ASC, age ASC",
 		},

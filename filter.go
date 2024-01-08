@@ -62,8 +62,21 @@ func (f Filter) ItemsLen() int {
 	return len(f.items)
 }
 
-func (f Filter) ReplaceAbstractNames(names map[string]string) error {
+func (f *Filter) ReplaceAbstractNames(names map[string]string) error {
+	if len(f.items) == 0 {
+		items, err := buildFilterItems(f.expression)
+		if err != nil {
+			return err
+		}
+
+		f.items = items
+	}
+
 	for i, v := range f.items {
+		if v.HasGroupOpen() || v.HasGroupClose() {
+			continue
+		}
+
 		var isFound bool
 		for abstractName, name := range names {
 			if v.Field == abstractName {
@@ -83,12 +96,12 @@ func (f Filter) ReplaceAbstractNames(names map[string]string) error {
 
 func (f Filter) SQL() (string, []any, error) {
 	if len(f.items) == 0 {
-		ms, err := buildFilterItems(f.expression)
+		items, err := buildFilterItems(f.expression)
 		if err != nil {
 			return "", nil, err
 		}
 
-		f.items = ms
+		f.items = items
 	}
 
 	if len(f.items) == 0 {
@@ -102,6 +115,16 @@ func (f Filter) SQL() (string, []any, error) {
 
 	var count int
 	for index, item := range f.items {
+		if item.HasGroupOpen() {
+			builder.WriteString(item.GroupOpen)
+			continue
+		}
+
+		if item.HasGroupClose() {
+			builder.WriteString(item.GroupClose)
+			continue
+		}
+
 		op, err := item.getOperator()
 		if err != nil {
 			return "", nil, err

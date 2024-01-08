@@ -25,7 +25,8 @@ func (c Criteria) SQL() (string, []any, error) {
 }
 
 func (c Criteria) SQLWithReplacedNames(names map[string]string) (string, []any, error) {
-	if err := c.Filter.ReplaceAbstractNames(names); err != nil {
+	err := c.Filter.ReplaceAbstractNames(names)
+	if err != nil {
 		return "", nil, err
 	}
 
