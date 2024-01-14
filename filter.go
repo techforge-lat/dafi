@@ -64,7 +64,7 @@ func (f Filter) ItemsLen() int {
 
 func (f *Filter) ReplaceAbstractNames(names map[string]string) error {
 	if len(f.items) == 0 {
-		items, err := buildFilterItems(f.expression)
+		items, err := BuildFilterItemsFromExpression(f.expression)
 		if err != nil {
 			return err
 		}
@@ -96,7 +96,7 @@ func (f *Filter) ReplaceAbstractNames(names map[string]string) error {
 
 func (f Filter) SQL() (string, []any, error) {
 	if len(f.items) == 0 {
-		items, err := buildFilterItems(f.expression)
+		items, err := BuildFilterItemsFromExpression(f.expression)
 		if err != nil {
 			return "", nil, err
 		}
@@ -116,12 +116,18 @@ func (f Filter) SQL() (string, []any, error) {
 	var count int
 	for index, item := range f.items {
 		if item.HasGroupOpen() {
+			builder.WriteString(" ")
+			builder.WriteString(item.ChainingKey)
 			builder.WriteString(item.GroupOpen)
 			continue
 		}
 
 		if item.HasGroupClose() {
 			builder.WriteString(item.GroupClose)
+
+			builder.WriteString(" ")
+			builder.WriteString(item.ChainingKey)
+			builder.WriteString(" ")
 			continue
 		}
 

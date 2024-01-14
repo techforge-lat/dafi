@@ -49,7 +49,7 @@ func (f FilterItem) getOperator() (string, error) {
 
 type FilterItems []FilterItem
 
-func buildFilterItems(expression string) (FilterItems, error) {
+func BuildFilterItemsFromExpression(expression string) (FilterItems, error) {
 	if expression == "" {
 		return nil, nil
 	}
@@ -69,9 +69,29 @@ func buildFilterItems(expression string) (FilterItems, error) {
 			continue
 		}
 
+		if firstPartsLen == 2 && firstParts[1] == "(" {
+			item := FilterItem{
+				GroupOpen:   "(",
+				ChainingKey: firstParts[0],
+			}
+
+			items = append(items, item)
+			continue
+		}
+
 		if firstPartsLen == 1 && firstParts[0] == ")" {
 			item := FilterItem{
 				GroupClose: ")",
+			}
+
+			items = append(items, item)
+			continue
+		}
+
+		if firstPartsLen == 2 && firstParts[0] == ")" {
+			item := FilterItem{
+				GroupClose:  ")",
+				ChainingKey: firstParts[1],
 			}
 
 			items = append(items, item)
