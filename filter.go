@@ -36,6 +36,8 @@ const (
 )
 
 type Filter struct {
+	ExcludeWhereClause bool
+
 	expression string
 	items      FilterItems
 }
@@ -62,6 +64,11 @@ func (f Filter) ItemsLen() int {
 	return len(f.items)
 }
 
+// ReplaceAbstractNames replaces abstract names by the actual db column's names
+// e.g contract_id => c.id
+// e.g customer_slug => customer.slug
+// this is to hide the actual names from the client using the package
+// and also validates that the given fields in the `items` query exists
 func (f *Filter) ReplaceAbstractNames(names map[string]string) error {
 	if len(f.items) == 0 {
 		items, err := BuildFilterItemsFromExpression(f.expression)
@@ -109,7 +116,9 @@ func (f Filter) SQL() (string, []any, error) {
 	}
 
 	builder := bytes.Buffer{}
-	builder.WriteString(" WHERE ")
+	if !f.ExcludeWhereClause {
+		builder.WriteString(" WHERE ")
+	}
 
 	args := []any{}
 

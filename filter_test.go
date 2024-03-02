@@ -7,8 +7,9 @@ import (
 
 func TestFilter_SQL(t *testing.T) {
 	type fields struct {
-		expression string
-		err        error
+		expression  string
+		exludeWhere bool
+		err         error
 	}
 	tests := []struct {
 		name      string
@@ -113,11 +114,30 @@ func TestFilter_SQL(t *testing.T) {
 			wantWhere: "WHERE domain = $1 AND  (slug IN ($2, $3, $4) OR id = $5)",
 			wantArgs:  []any{"facebook.com", "facebook", "apple", "microsoft", "123"},
 		},
+		{
+			name: "domain equal and slug in with groups",
+			fields: fields{
+				expression:  "domain = [facebook.com] AND:(:slug IN [facebook,apple,microsoft] OR:id = [123]:)",
+				exludeWhere: true,
+			},
+			wantWhere: "domain = $1 AND  (slug IN ($2, $3, $4) OR id = $5)",
+			wantArgs:  []any{"facebook.com", "facebook", "apple", "microsoft", "123"},
+		},
+		{
+			name: "username in",
+			fields: fields{
+				expression:  "username in [1,2,3]",
+				exludeWhere: true,
+			},
+			wantWhere: "username IN ($1, $2, $3)",
+			wantArgs:  []any{"1", "2", "3"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			f := &Filter{
-				expression: tt.fields.expression,
+				expression:         tt.fields.expression,
+				ExcludeWhereClause: tt.fields.exludeWhere,
 			}
 			gotWhere, gotArgs, err := f.SQL()
 			if gotWhere != tt.wantWhere {
