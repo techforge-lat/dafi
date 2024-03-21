@@ -27,6 +27,30 @@ func NewFilterItem(field string, operator string, value any, chainingKey ...stri
 	return f
 }
 
+func (f FilterItem) GetField() string {
+	return f.Field
+}
+
+func (f FilterItem) GetOperator() string {
+	return string(f.Operator)
+}
+
+func (f FilterItem) GetValue() any {
+	return f.Value
+}
+
+func (f FilterItem) GetChainingKey() string {
+	return f.ChainingKey
+}
+
+func (f FilterItem) GetGroupOpen() string {
+	return f.GroupOpen
+}
+
+func (f FilterItem) GetGroupClose() string {
+	return f.GroupClose
+}
+
 func (f FilterItem) HasGroupOpen() bool {
 	return f.GroupOpen != ""
 }
@@ -35,7 +59,7 @@ func (f FilterItem) HasGroupClose() bool {
 	return f.GroupClose != ""
 }
 
-func (f FilterItem) getOperator() (string, error) {
+func (f FilterItem) GetParsedOperator() (string, error) {
 	validOperators := []string{"=", "<", ">", "<=", ">=", "<>", "!=", "is", "is_not", "ilike", "not_ilike", "like", "not_like", "in"}
 
 	for _, v := range validOperators {
@@ -49,7 +73,7 @@ func (f FilterItem) getOperator() (string, error) {
 
 type FilterItems []FilterItem
 
-func BuildFilterItemsFromExpression(expression string) (FilterItems, error) {
+func BuildFilterItems(expression string) (FilterItems, error) {
 	if expression == "" {
 		return nil, nil
 	}
@@ -116,7 +140,7 @@ func BuildFilterItemsFromExpression(expression string) (FilterItems, error) {
 
 		item := FilterItem{
 			Field:       firstParts[0],
-			Operator:    firstParts[1],
+			Operator:    strings.ToUpper(firstParts[1]),
 			Value:       v[valueOpenIndex+1 : valueCloseIndex],
 			ChainingKey: strings.TrimSpace(v[valueCloseIndex+1:]),
 		}

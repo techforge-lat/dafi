@@ -1,61 +1,70 @@
 package dafi
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
-func TestSort_SQL(t *testing.T) {
+func TestBuildSortItems(t *testing.T) {
 	type fields struct {
 		expression string
-		items      SortItems
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   string
+		want   SortItems
 	}{
 		{
 			name: "",
 			fields: fields{
 				expression: "name+:age-",
 			},
-			want: " ORDER BY name ASC, age DESC",
+			want: SortItems{
+				{Field: "name", Order: "ASC"},
+				{Field: "age", Order: "DESC"},
+			},
 		},
 		{
 			name: "",
 			fields: fields{
 				expression: "name+:age",
 			},
-			want: " ORDER BY name ASC, age ASC",
+			want: SortItems{
+				{Field: "name", Order: "ASC"},
+				{Field: "age", Order: "ASC"},
+			},
 		},
 		{
 			name: "",
 			fields: fields{
 				expression: "name:age",
 			},
-			want: " ORDER BY name ASC, age ASC",
+			want: SortItems{
+				{Field: "name", Order: "ASC"},
+				{Field: "age", Order: "ASC"},
+			},
 		},
 		{
 			name: "",
 			fields: fields{
 				expression: "name",
 			},
-			want: " ORDER BY name ASC",
+			want: SortItems{
+				{Field: "name", Order: "ASC"},
+			},
 		},
 		{
 			name: "",
 			fields: fields{
 				expression: "",
 			},
-			want: "",
+			want: nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Sort{
-				expression: tt.fields.expression,
-				items:      tt.fields.items,
-			}
-			if got := s.SQL(); got != tt.want {
-				t.Errorf("Sort.SQL() = %v, want %v", got, tt.want)
+			if got := BuildSortItems(tt.fields.expression); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("BuildSortItems() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -1,17 +1,12 @@
 package dafi
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
-	"strconv"
-	"strings"
 )
 
 var (
 	ErrInvalidFilterFormat = errors.New("invalid filter format, format is: field operator [value] chainingKey")
 	ErrInvalidOperator     = errors.New("invalid operator, must be a =, <, >, <=, >=, <>, !=, IS, ILIKE, LIKE")
-	ErrInvalidFieldName    = errors.New("invalid field name")
 )
 
 const (
@@ -36,8 +31,6 @@ const (
 )
 
 type Filter struct {
-	ExcludeWhereClause bool
-
 	expression string
 	items      FilterItems
 }
@@ -62,123 +55,4 @@ func (f *Filter) AppendItems(items ...FilterItem) {
 
 func (f Filter) ItemsLen() int {
 	return len(f.items)
-}
-
-// ReplaceAbstractNames replaces abstract names by the actual db column's names
-// e.g contract_id => c.id
-// e.g customer_slug => customer.slug
-// this is to hide the actual names from the client using the package
-// and also validates that the given fields in the `items` query exists
-func (f *Filter) ReplaceAbstractNames(names map[string]string) error {
-	if len(f.items) == 0 {
-		items, err := BuildFilterItemsFromExpression(f.expression)
-		if err != nil {
-			return err
-		}
-
-		f.items = items
-	}
-
-	for i, v := range f.items {
-		if v.HasGroupOpen() || v.HasGroupClose() {
-			continue
-		}
-
-		var isFound bool
-		for abstractName, name := range names {
-			if v.Field == abstractName {
-				f.items[i].Field = name
-				isFound = true
-				break
-			}
-		}
-
-		if !isFound {
-			return fmt.Errorf("filter: %w, field %s is missing", ErrInvalidFieldName, v.Field)
-		}
-	}
-
-	return nil
-}
-
-func (f Filter) SQL() (string, []any, error) {
-	if len(f.items) == 0 {
-		items, err := BuildFilterItemsFromExpression(f.expression)
-		if err != nil {
-			return "", nil, err
-		}
-
-		f.items = items
-	}
-
-	if len(f.items) == 0 {
-		return "", nil, nil
-	}
-
-	builder := bytes.Buffer{}
-	if !f.ExcludeWhereClause {
-		builder.WriteString(" WHERE ")
-	}
-
-	args := []any{}
-
-	var count int
-	for index, item := range f.items {
-		if item.HasGroupOpen() {
-			builder.WriteString(" ")
-			builder.WriteString(item.ChainingKey)
-			builder.WriteString(item.GroupOpen)
-			continue
-		}
-
-		if item.HasGroupClose() {
-			builder.WriteString(item.GroupClose)
-
-			builder.WriteString(" ")
-			builder.WriteString(item.ChainingKey)
-			builder.WriteString(" ")
-			continue
-		}
-
-		op, err := item.getOperator()
-		if err != nil {
-			return "", nil, err
-		}
-
-		builder.WriteString(item.Field)
-		builder.WriteString(" ")
-		builder.WriteString(op)
-
-		if op == In {
-			in, inArgs := buildIn(item.Value, count)
-			builder.WriteString(" ")
-			builder.WriteString(in)
-
-			count += len(inArgs)
-			args = append(args, inArgs...)
-		} else {
-			builder.WriteString(" ")
-			builder.WriteString("$")
-			builder.WriteString(strconv.Itoa(count + 1))
-			count++
-		}
-
-		if item.ChainingKey != "" && len(f.items)-1 > index {
-			builder.WriteString(" ")
-			builder.WriteString(strings.ToUpper(item.ChainingKey))
-			builder.WriteString(" ")
-		}
-
-		if op == In {
-			continue
-		}
-
-		args = append(args, item.Value)
-	}
-
-	return strings.TrimSpace(builder.String()), args, nil
-}
-
-func isChainingKey(value string) bool {
-	return strings.EqualFold(value, "AND") || strings.EqualFold(value, "OR")
 }
