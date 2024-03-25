@@ -2,6 +2,8 @@ package dafi
 
 import (
 	"errors"
+
+	"github.com/techforge-lat/sqlcraft"
 )
 
 var (
@@ -33,6 +35,15 @@ const (
 type Filter struct {
 	expression string
 	items      FilterItems
+}
+
+func (f Filter) Items() sqlcraft.FilterItems {
+	items := sqlcraft.FilterItems{}
+	for _, v := range f.items {
+		items = append(items, v)
+	}
+
+	return items
 }
 
 func NewFilter(items FilterItems) Filter {

@@ -14,6 +14,14 @@ type SortItem struct {
 	Order string
 }
 
+func (s SortItem) GetField() string {
+	return s.Field
+}
+
+func (s SortItem) GetOrder() string {
+	return s.Order
+}
+
 func NewSortItem(field, order string) SortItem {
 	return SortItem{
 		Field: field,
