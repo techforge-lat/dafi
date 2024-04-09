@@ -37,7 +37,7 @@ type Filter struct {
 	items      FilterItems
 }
 
-func (f Filter) Items() sqlcraft.FilterItems {
+func (f *Filter) Items() sqlcraft.FilterItems {
 	items := sqlcraft.FilterItems{}
 	for _, v := range f.items {
 		items = append(items, v)
@@ -64,6 +64,6 @@ func (f *Filter) AppendItems(items ...FilterItem) {
 	f.items = append(f.items, items...)
 }
 
-func (f Filter) ItemsLen() int {
+func (f *Filter) ItemsLen() int {
 	return len(f.items)
 }

@@ -1,6 +1,7 @@
 package dafi
 
 import (
+	"github.com/techforge-lat/sqlcraft"
 	"strings"
 )
 
@@ -34,6 +35,15 @@ type SortItems []SortItem
 type Sort struct {
 	expression string
 	items      SortItems
+}
+
+func (s Sort) Items() sqlcraft.SortItems {
+	items := sqlcraft.SortItems{}
+	for _, v := range s.items {
+		items = append(items, v)
+	}
+
+	return items
 }
 
 func NewSort(items ...SortItem) Sort {
