@@ -64,6 +64,10 @@ func (f *Filter) AppendItems(items ...FilterItem) {
 	f.items = append(f.items, items...)
 }
 
+func (f *Filter) PushItems(items ...FilterItem) {
+	f.items = append(items, f.items...)
+}
+
 func (f *Filter) ItemsLen() int {
 	return len(f.items)
 }
