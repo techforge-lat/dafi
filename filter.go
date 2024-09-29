@@ -1,73 +1,45 @@
 package dafi
 
-import (
-	"errors"
-
-	"github.com/techforge-lat/sqlcraft"
+type (
+	FilterField string
+	FilterValue any
 )
 
-var (
-	ErrInvalidFilterFormat = errors.New("invalid filter format, format is: field operator [value] chainingKey")
-	ErrInvalidOperator     = errors.New("invalid operator, must be a =, <, >, <=, >=, <>, !=, IS, ILIKE, LIKE")
-)
+type FilterOperator string
 
 const (
-	And = "AND"
-	Or  = "OR"
+	Equal          FilterOperator = "="
+	NotEqual       FilterOperator = "!="
+	Greater        FilterOperator = ">"
+	GreaterOrEqual FilterOperator = ">="
+	Less           FilterOperator = "<"
+	LessOrEqual    FilterOperator = "<="
+	Like           FilterOperator = "LIKE"
+	NotLike        FilterOperator = "NOT_LIKE"
+	ILike          FilterOperator = "ILIKE"
+	NotILike       FilterOperator = "NOT_ILIKE"
+	Is             FilterOperator = "IS"
+	IsNull         FilterOperator = "IS_NULL"
+	IsNot          FilterOperator = "IS_NOT"
+	IsNotNull      FilterOperator = "IS_NOT_NULL"
+	In             FilterOperator = "IN"
+	NotIn          FilterOperator = "NOT_IN"
 )
 
+type FilterChainingKey string
+
 const (
-	Equal              = "="
-	LessThan           = "<"
-	GreaterThan        = ">"
-	LessThanOrEqual    = "<="
-	GreaterThanOrEqual = ">="
-	NotEqual           = "<>"
-	Is                 = "IS"
-	IsNot              = "IS_NOT"
-	ILike              = "ILIKE"
-	NotILike           = "NOT_ILIKE"
-	Like               = "LIKE"
-	NotLike            = "NOT_LIKE"
-	In                 = "IN"
+	And FilterChainingKey = "AND"
+	Or  FilterChainingKey = "OR"
 )
 
 type Filter struct {
-	expression string
-	items      FilterItems
+	IsGroupOpen  bool
+	Field        FilterField
+	Op           FilterOperator
+	Value        FilterValue
+	ChainingKey  FilterChainingKey
+	IsGroupClose bool
 }
 
-func (f *Filter) Items() sqlcraft.FilterItems {
-	items := sqlcraft.FilterItems{}
-	for _, v := range f.items {
-		items = append(items, v)
-	}
-
-	return items
-}
-
-func NewFilter(items FilterItems) Filter {
-	return Filter{items: items}
-}
-
-func NewFilterItems(items ...FilterItem) Filter {
-	return Filter{
-		items: items,
-	}
-}
-
-func NewFilterExpression(expression string) Filter {
-	return Filter{expression: expression}
-}
-
-func (f *Filter) AppendItems(items ...FilterItem) {
-	f.items = append(f.items, items...)
-}
-
-func (f *Filter) PushItems(items ...FilterItem) {
-	f.items = append(items, f.items...)
-}
-
-func (f *Filter) ItemsLen() int {
-	return len(f.items)
-}
+type Filters []Filter
