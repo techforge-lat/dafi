@@ -19,9 +19,7 @@ const (
 	ILike          FilterOperator = "ILIKE"
 	NotILike       FilterOperator = "NOT_ILIKE"
 	Is             FilterOperator = "IS"
-	IsNull         FilterOperator = "IS_NULL"
 	IsNot          FilterOperator = "IS_NOT"
-	IsNotNull      FilterOperator = "IS_NOT_NULL"
 	In             FilterOperator = "IN"
 	NotIn          FilterOperator = "NOT_IN"
 )
@@ -43,3 +41,7 @@ type Filter struct {
 }
 
 type Filters []Filter
+
+func (f Filters) IsZero() bool {
+	return len(f) == 0
+}

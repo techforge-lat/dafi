@@ -5,7 +5,7 @@ type SortType string
 const (
 	Asc  SortType = "asc"
 	Desc SortType = "desc"
-	None SortType = "none"
+	None SortType = ""
 )
 
 type SortBy string
@@ -16,3 +16,7 @@ type Sort struct {
 }
 
 type Sorts []Sort
+
+func (s Sorts) IsZero() bool {
+	return len(s) == 0
+}
