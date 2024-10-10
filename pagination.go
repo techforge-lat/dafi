@@ -1,10 +1,18 @@
 package dafi
 
 type Pagination struct {
-	Limit  uint
-	Offset uint
+	PageNumber uint
+	PageSize   uint
 }
 
-func NewPagination(limit uint, offset uint) Pagination {
-	return Pagination{Limit: limit, Offset: offset}
+func (p Pagination) IsZero() bool {
+	return p.PageNumber == 0 && p.PageSize == 0
+}
+
+func (p Pagination) HasPageNumber() bool {
+	return p.PageNumber > 0
+}
+
+func (p Pagination) HasPageSize() bool {
+	return p.PageSize > 0
 }
