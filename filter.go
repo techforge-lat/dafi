@@ -14,10 +14,8 @@ const (
 	GreaterOrEqual FilterOperator = ">="
 	Less           FilterOperator = "<"
 	LessOrEqual    FilterOperator = "<="
-	Like           FilterOperator = "LIKE"
-	NotLike        FilterOperator = "NOT_LIKE"
-	ILike          FilterOperator = "ILIKE"
-	NotILike       FilterOperator = "NOT_ILIKE"
+	Contains       FilterOperator = "CONTAINS"
+	NotContains    FilterOperator = "NOT_CONTAINS"
 	Is             FilterOperator = "IS"
 	IsNot          FilterOperator = "IS_NOT"
 	In             FilterOperator = "IN"
@@ -32,12 +30,14 @@ const (
 )
 
 type Filter struct {
-	IsGroupOpen  bool
-	Field        FilterField
-	Op           FilterOperator
-	Value        FilterValue
-	ChainingKey  FilterChainingKey
-	IsGroupClose bool
+	IsGroupOpen   bool
+	GroupOpenQty  int
+	Field         FilterField
+	Operator      FilterOperator
+	Value         FilterValue
+	IsGroupClose  bool
+	GroupCloseQty int
+	ChainingKey   FilterChainingKey
 }
 
 type Filters []Filter

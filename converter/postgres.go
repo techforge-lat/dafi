@@ -2,12 +2,29 @@ package converter
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/techforge-lat/dafi"
 )
+
+var psqlOperatorByDafiOperator = map[dafi.FilterOperator]string{
+	dafi.Equal:          "=",
+	dafi.NotEqual:       "<>",
+	dafi.Greater:        ">",
+	dafi.GreaterOrEqual: ">=",
+	dafi.Less:           "<",
+	dafi.LessOrEqual:    "<=",
+	dafi.Contains:       "ILIKE",
+	dafi.NotContains:    "NOT ILIKE",
+	dafi.Is:             "IS",
+	dafi.IsNot:          "IS NOT",
+	dafi.In:             "IN",
+	dafi.NotIn:          "NOT IN",
+}
 
 type PsqlResult struct {
 	Sql  string
@@ -19,11 +36,17 @@ type PsqlConverter struct {
 }
 
 func NewPsqlConverter(maxPageSize uint) PsqlConverter {
-	return PsqlConverter{MaxPageSize: maxPageSize}
+	return PsqlConverter{
+		MaxPageSize: maxPageSize,
+	}
 }
 
 func (p PsqlConverter) ToSQL(criteria dafi.Criteria) (PsqlResult, error) {
-	whereSql, args := p.BuildWhere(criteria.Filters)
+	whereSql, args, err := p.BuildWhere(criteria.Filters)
+	if err != nil {
+		return PsqlResult{}, err
+	}
+
 	sortSql := p.BuildSort(criteria.Sorts)
 	paginationSql := p.BuildPagination(criteria.Pagination)
 
@@ -46,9 +69,9 @@ func (p PsqlConverter) ToSQL(criteria dafi.Criteria) (PsqlResult, error) {
 	}, nil
 }
 
-func (p PsqlConverter) BuildWhere(filters dafi.Filters) (string, []any) {
+func (p PsqlConverter) BuildWhere(filters dafi.Filters) (string, []any, error) {
 	if filters.IsZero() {
-		return "", nil
+		return "", nil, nil
 	}
 
 	builder := strings.Builder{}
@@ -57,10 +80,19 @@ func (p PsqlConverter) BuildWhere(filters dafi.Filters) (string, []any) {
 	builder.WriteString("WHERE ")
 	for i, filter := range filters {
 		if filter.IsGroupOpen {
-			builder.WriteString("(")
+			if filter.GroupOpenQty == 0 {
+				filter.GroupOpenQty = 1
+			}
+
+			builder.WriteString(strings.Repeat("(", filter.GroupOpenQty))
 		}
 
-		if filter.Op == dafi.In || filter.Op == dafi.NotIn {
+		operator, ok := psqlOperatorByDafiOperator[filter.Operator]
+		if !ok {
+			return "", nil, errors.Join(fmt.Errorf("operator %q not found", filter.Operator), ErrInvalidOperator)
+		}
+
+		if filter.Operator == dafi.In || filter.Operator == dafi.NotIn {
 			in, inArgs := p.BuildIn(filter.Value, len(args)+1)
 			if in == "" {
 				continue
@@ -68,7 +100,7 @@ func (p PsqlConverter) BuildWhere(filters dafi.Filters) (string, []any) {
 
 			builder.WriteString(string(filter.Field))
 			builder.WriteString(" ")
-			builder.WriteString(strings.ReplaceAll(string(filter.Op), "_", " "))
+			builder.WriteString(operator)
 
 			builder.WriteString(" ")
 			builder.WriteString(in)
@@ -77,7 +109,7 @@ func (p PsqlConverter) BuildWhere(filters dafi.Filters) (string, []any) {
 		} else {
 			builder.WriteString(string(filter.Field))
 			builder.WriteString(" ")
-			builder.WriteString(strings.ReplaceAll(string(filter.Op), "_", " "))
+			builder.WriteString(operator)
 			builder.WriteString(" $")
 			builder.WriteString(strconv.Itoa(i + 1))
 
@@ -89,7 +121,11 @@ func (p PsqlConverter) BuildWhere(filters dafi.Filters) (string, []any) {
 		}
 
 		if filter.IsGroupClose {
-			builder.WriteString(")")
+			if filter.GroupCloseQty == 0 {
+				filter.GroupCloseQty = 1
+			}
+
+			builder.WriteString(strings.Repeat(")", filter.GroupCloseQty))
 		}
 
 		builder.WriteString(" ")
@@ -97,7 +133,7 @@ func (p PsqlConverter) BuildWhere(filters dafi.Filters) (string, []any) {
 		builder.WriteString(" ")
 	}
 
-	return strings.TrimSpace(builder.String()), args
+	return strings.TrimSpace(builder.String()), args, nil
 }
 
 func (p PsqlConverter) BuildIn(value any, index int) (string, []any) {
