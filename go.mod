@@ -1,5 +1,3 @@
-module github.com/techforge-lat/dafi
+module github.com/techforge-lat/dafi/v2
 
 go 1.21.4
-
-require github.com/techforge-lat/sqlcraft v0.4.0

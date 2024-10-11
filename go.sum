@@ -1,5 +1,0 @@
-github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
-github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/techforge-lat/sqlcraft v0.3.0/go.mod h1:H7ja3fQS8m7ZSMWjzrOeAVg/VedFFDeuBFQFCp7ROmE=
-github.com/techforge-lat/sqlcraft v0.4.0 h1:HUN4EAGAThKdJX4xu908gGFLx+kbJqs7x8v4XPOQyzo=
-github.com/techforge-lat/sqlcraft v0.4.0/go.mod h1:H7ja3fQS8m7ZSMWjzrOeAVg/VedFFDeuBFQFCp7ROmE=
