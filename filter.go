@@ -8,18 +8,19 @@ type (
 type FilterOperator string
 
 const (
-	Equal          FilterOperator = "="
-	NotEqual       FilterOperator = "!="
-	Greater        FilterOperator = ">"
-	GreaterOrEqual FilterOperator = ">="
-	Less           FilterOperator = "<"
-	LessOrEqual    FilterOperator = "<="
-	Contains       FilterOperator = "CONTAINS"
-	NotContains    FilterOperator = "NOT_CONTAINS"
-	Is             FilterOperator = "IS"
-	IsNot          FilterOperator = "IS_NOT"
-	In             FilterOperator = "IN"
-	NotIn          FilterOperator = "NOT_IN"
+	Equal          FilterOperator = "eq"
+	NotEqual       FilterOperator = "ne"
+	Greater        FilterOperator = "gt"
+	GreaterOrEqual FilterOperator = "gte"
+	Less           FilterOperator = "lt"
+	LessOrEqual    FilterOperator = "lte"
+	Like           FilterOperator = "like"
+	In             FilterOperator = "in"
+	NotIn          FilterOperator = "nin"
+	Contains       FilterOperator = "contains"
+	NotContains    FilterOperator = "ncontains"
+	Is             FilterOperator = "is"
+	IsNot          FilterOperator = "isn"
 )
 
 type FilterChainingKey string

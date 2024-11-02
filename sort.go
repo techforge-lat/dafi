@@ -3,8 +3,8 @@ package dafi
 type SortType string
 
 const (
-	Asc  SortType = "asc"
-	Desc SortType = "desc"
+	Asc  SortType = "ASC"
+	Desc SortType = "DESC"
 	None SortType = ""
 )
 
