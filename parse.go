@@ -41,6 +41,11 @@ func (p *QueryParser) Parse(values url.Values) (Criteria, error) {
 	criteria := Criteria{}
 
 	for key, values := range values {
+		if key == "select-fields" {
+			criteria.SelectColumns = strings.Split(values[0], ",")
+			continue
+		}
+
 		if err := p.parseValues(key, values, &criteria); err != nil {
 			return Criteria{}, err
 		}
