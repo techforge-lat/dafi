@@ -20,7 +20,12 @@ const (
 	Contains       FilterOperator = "contains"
 	NotContains    FilterOperator = "ncontains"
 	Is             FilterOperator = "is"
+	IsNull         FilterOperator = "isnull"
 	IsNot          FilterOperator = "isn"
+	IsNotNull      FilterOperator = "isnnull"
+
+	// Default is used when no operator is specified and the value is already defined with a sub-query
+	Default FilterOperator = "default"
 )
 
 type FilterChainingKey string
