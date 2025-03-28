@@ -60,7 +60,7 @@ func (p *QueryParser) parseValues(key string, values []string, criteria *Criteri
 			continue
 		}
 
-		parts := strings.SplitN(value, ":", 3)
+		parts := strings.SplitN(value, ":", 4)
 		if err := p.parsePart(key, parts, criteria); err != nil {
 			return err
 		}
@@ -82,6 +82,10 @@ func (p *QueryParser) parsePart(key string, parts []string, criteria *Criteria) 
 		}
 
 		criteria.Filters = append(criteria.Filters, filter)
+		if filter.OverridePreviousFilterChainingKey != "" && len(criteria.Filters) > 1 {
+			criteria.Filters[len(criteria.Filters)-2].ChainingKey = filter.OverridePreviousFilterChainingKey
+			criteria.Filters[len(criteria.Filters)-1].OverridePreviousFilterChainingKey = ""
+		}
 	}
 
 	return nil
@@ -119,6 +123,16 @@ func (p *QueryParser) parseSort(field string, parts []string) Sort {
 }
 
 func (p *QueryParser) parseFilter(field string, parts []string) (Filter, error) {
+	overridePreviousFilterChainingKey := FilterChainingKey("")
+	if len(parts) == 4 {
+		overridePreviousFilterChainingKey = FilterChainingKey(strings.ToUpper(parts[3]))
+		parts = parts[1:]
+	}
+	if len(parts) == 3 && (strings.EqualFold(parts[0], string(And)) || strings.EqualFold(parts[0], string(Or))) {
+		overridePreviousFilterChainingKey = FilterChainingKey(strings.ToUpper(parts[0]))
+		parts = parts[1:]
+	}
+
 	operator := p.determineOperator(parts[0])
 	chainingKey := p.determineChainingKey(parts)
 
@@ -128,10 +142,11 @@ func (p *QueryParser) parseFilter(field string, parts []string) (Filter, error) 
 	}
 
 	return Filter{
-		Field:       FilterField(field),
-		Operator:    operator,
-		Value:       value,
-		ChainingKey: chainingKey,
+		Field:                             FilterField(field),
+		Operator:                          operator,
+		Value:                             value,
+		ChainingKey:                       chainingKey,
+		OverridePreviousFilterChainingKey: overridePreviousFilterChainingKey,
 	}, nil
 }
 

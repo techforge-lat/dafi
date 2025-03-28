@@ -151,6 +151,36 @@ func TestQueryParser_Parse(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:   "override previous filter chaining key",
+			fields: fields{operators: defaultOperators},
+			args: args{values: url.Values{
+				"name":         []string{"eq:john:or"},
+				"workspace_id": []string{"and:eq:123:and"},
+			}},
+			want: Criteria{
+				Filters: Filters{
+					{Field: "name", Operator: "eq", Value: "john", ChainingKey: And},
+					{Field: "workspace_id", Operator: "eq", Value: "123", ChainingKey: And},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:   "override previous filter chaining key with",
+			fields: fields{operators: defaultOperators},
+			args: args{values: url.Values{
+				"name":         []string{"eq:john:or"},
+				"workspace_id": []string{"and:eq:123"},
+			}},
+			want: Criteria{
+				Filters: Filters{
+					{Field: "name", Operator: "eq", Value: "john", ChainingKey: And},
+					{Field: "workspace_id", Operator: "eq", Value: "123", ChainingKey: And},
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

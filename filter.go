@@ -31,14 +31,15 @@ const (
 )
 
 type Filter struct {
-	IsGroupOpen   bool
-	GroupOpenQty  int
-	Field         FilterField
-	Operator      FilterOperator
-	Value         FilterValue
-	IsGroupClose  bool
-	GroupCloseQty int
-	ChainingKey   FilterChainingKey
+	IsGroupOpen                       bool
+	GroupOpenQty                      int
+	Field                             FilterField
+	Operator                          FilterOperator
+	Value                             FilterValue
+	IsGroupClose                      bool
+	GroupCloseQty                     int
+	ChainingKey                       FilterChainingKey
+	OverridePreviousFilterChainingKey FilterChainingKey
 }
 
 type Filters []Filter
