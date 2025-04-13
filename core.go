@@ -10,11 +10,12 @@ const (
 )
 
 type Criteria struct {
-	SelectColumns []string
-	Joins         []string
-	Filters       Filters
-	Sorts         Sorts
-	Pagination    Pagination
+	SelectColumns   []string
+	Joins           []string
+	Filters         Filters
+	FiltersByModule map[string]Filters
+	Sorts           Sorts
+	Pagination      Pagination
 }
 
 func New() Criteria {

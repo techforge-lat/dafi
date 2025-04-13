@@ -79,6 +79,24 @@ func (p *QueryParser) parsePart(key string, parts []string, criteria *Criteria) 
 			return err
 		}
 
+		if filter.Module != "" {
+			if criteria.FiltersByModule == nil {
+				criteria.FiltersByModule = make(map[string]Filters)
+			}
+
+			if _, ok := criteria.FiltersByModule[filter.Module]; !ok {
+				criteria.FiltersByModule[filter.Module] = Filters{}
+			}
+			criteria.FiltersByModule[filter.Module] = append(criteria.FiltersByModule[filter.Module], filter)
+
+			if filter.OverridePreviousFilterChainingKey != "" && len(criteria.Filters) > 1 {
+				criteria.FiltersByModule[filter.Module][len(criteria.FiltersByModule[filter.Module])-2].ChainingKey = filter.OverridePreviousFilterChainingKey
+				criteria.FiltersByModule[filter.Module][len(criteria.FiltersByModule[filter.Module])-1].OverridePreviousFilterChainingKey = ""
+			}
+
+			return nil
+		}
+
 		criteria.Filters = append(criteria.Filters, filter)
 		if filter.OverridePreviousFilterChainingKey != "" && len(criteria.Filters) > 1 {
 			criteria.Filters[len(criteria.Filters)-2].ChainingKey = filter.OverridePreviousFilterChainingKey
@@ -139,8 +157,17 @@ func (p *QueryParser) parseFilter(field string, parts []string) (Filter, error) 
 		value = strings.Split(parts[1], ",")
 	}
 
+	fieldSplit := strings.Split(field, ".")
+	module := ""
+	fieldKey := field
+	if len(fieldSplit) == 2 {
+		module = fieldSplit[0]
+		fieldKey = fieldSplit[1]
+	}
+
 	return Filter{
-		Field:                             FilterField(field),
+		Module:                            module,
+		Field:                             FilterField(fieldKey),
 		Operator:                          operator,
 		Value:                             value,
 		ChainingKey:                       chainingKey,

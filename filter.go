@@ -36,6 +36,7 @@ const (
 )
 
 type Filter struct {
+	Module                            string
 	IsGroupOpen                       bool
 	GroupOpenQty                      int
 	Field                             FilterField

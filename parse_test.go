@@ -181,6 +181,27 @@ func TestQueryParser_Parse(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		// {
+		// 	name:   "filters by module",
+		// 	fields: fields{operators: defaultOperators},
+		// 	args: args{values: url.Values{
+		// 		"name":         []string{"eq:john:or"},
+		// 		"workspace_id": []string{"and:eq:123"},
+		// 		"category.id":  []string{"eq:eq:123"},
+		// 	}},
+		// 	want: Criteria{
+		// 		Filters: Filters{
+		// 			{Field: "name", Operator: Equal, Value: "john", ChainingKey: And},
+		// 			{Field: "workspace_id", Operator: Equal, Value: "123", ChainingKey: And},
+		// 		},
+		// 		FiltersByModule: map[string]Filters{
+		// 			"category": {
+		// 				{Module: "category", Field: "id", Operator: "eq", Value: "123", ChainingKey: And},
+		// 			},
+		// 		},
+		// 	},
+		// 	wantErr: false,
+		// },
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
