@@ -44,6 +44,10 @@ func (p *QueryParser) Parse(values url.Values) (Criteria, error) {
 	criteria := Criteria{}
 
 	for key, values := range values {
+		if key == "datastar" {
+			continue
+		}
+
 		if err := p.parseValues(key, values, &criteria); err != nil {
 			return Criteria{}, err
 		}
@@ -59,6 +63,10 @@ func (p *QueryParser) parseValues(key string, values []string, criteria *Criteri
 		}
 
 		parts := strings.SplitN(value, ":", 4)
+		if len(parts) == 1 {
+			continue
+		}
+
 		if err := p.parsePart(key, parts, criteria); err != nil {
 			return err
 		}
